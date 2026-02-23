@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexDesk — Helpdesk Ticketing System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    
+    --bg: #080d1a;
+    --bg2: #0d1526;
+    --bg3: #111d33;
+    --bg4: #162240;
+    --border: rgba(0,180,255,0.12);
+    --border2: rgba(0,180,255,0.22);
+    --cyan: #00c8ff;
+    --cyan2: #0099cc;
+    --cyan-glow: rgba(0,200,255,0.15);
+    --cyan-glow2: rgba(0,200,255,0.08);
+    --text: #e8f4ff;
+    --text2: #8aacc8;
+    --text3: #4a6a88;
+    --red: #ff4466;
+    --orange: #ff8c42;
+    --yellow: #ffc233;
+    --green: #22dd88;
+    --purple: #a855f7;
+    --card-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    --glow: 0 0 20px rgba(0,200,255,0.2);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+
+  /* ── UTILITY ── */
+  .hidden { display: none !important; }
+  .flex { display: flex; }
+  .items-center { align-items: center; }
+  .gap-2 { gap: 8px; }
+  .gap-3 { gap: 12px; }
+  .gap-4 { gap: 16px; }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .badge-open { background: rgba(255,194,51,0.15); color: var(--yellow); border: 1px solid rgba(255,194,51,0.3); }
+  .badge-inprogress { background: rgba(0,200,255,0.12); color: var(--cyan); border: 1px solid rgba(0,200,255,0.3); }
+  .badge-resolved { background: rgba(34,221,136,0.12); color: var(--green); border: 1px solid rgba(34,221,136,0.3); }
+  .badge-closed { background: rgba(74,106,136,0.2); color: var(--text3); border: 1px solid rgba(74,106,136,0.3); }
+  .badge-critical { background: rgba(255,68,102,0.15); color: var(--red); border: 1px solid rgba(255,68,102,0.3); }
+  .badge-high { background: rgba(255,140,66,0.15); color: var(--orange); border: 1px solid rgba(255,140,66,0.3); }
+  .badge-medium { background: rgba(255,194,51,0.12); color: var(--yellow); border: 1px solid rgba(255,194,51,0.25); }
+  .badge-low { background: rgba(34,221,136,0.12); color: var(--green); border: 1px solid rgba(34,221,136,0.25); }
+
+  /* ═══════════════════════════════
+     LOGIN SCREEN
+  ═══════════════════════════════ */
+  #login-screen {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+    background: radial-gradient(ellipse at 30% 40%, rgba(0,100,200,0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 70%, rgba(0,200,255,0.08) 0%, transparent 50%),
+                var(--bg);
+  }
+  #login-screen::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(0,180,255,0.04) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(0,180,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .login-container {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 460px;
+    padding: 20px;
+  }
+  .login-logo {
+    text-align: center; margin-bottom: 40px;
+  }
+  .login-logo .logo-icon {
+    width: 64px; height: 64px; border-radius: 18px;
+    background: linear-gradient(135deg, var(--cyan2), var(--cyan));
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 28px; color: #fff; margin-bottom: 16px;
+    box-shadow: 0 8px 32px rgba(0,200,255,0.35);
+  }
+  .login-logo h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px; font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--text);
+  }
+  .login-logo h1 span { color: var(--cyan); }
+  .login-logo p { color: var(--text2); margin-top: 6px; font-size: 14px; }
+
+  .login-card {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 36px;
+    box-shadow: var(--card-shadow), 0 0 40px rgba(0,200,255,0.05);
+  }
+  .login-tabs {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; margin-bottom: 28px;
+    background: var(--bg3); border-radius: 12px; padding: 5px;
+  }
+  .login-tab {
+    padding: 10px; border-radius: 8px; border: none; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+    color: var(--text2); background: transparent; transition: all 0.2s;
+  }
+  .login-tab.active {
+    background: var(--bg4); color: var(--cyan);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .form-group { margin-bottom: 18px; }
+  .form-group label {
+    display: block; font-size: 12px; font-weight: 600;
+    color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px;
+    margin-bottom: 8px;
+  }
+  .form-control {
+    width: 100%; padding: 12px 16px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    transition: all 0.2s; outline: none;
+  }
+  .form-control:focus {
+    border-color: var(--cyan); box-shadow: 0 0 0 3px var(--cyan-glow2);
+  }
+  .form-control::placeholder { color: var(--text3); }
+  select.form-control option { background: var(--bg3); }
+
+  .btn {
+    width: 100%; padding: 13px;
+    border: none; border-radius: 10px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+    transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--cyan2), var(--cyan));
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(0,200,255,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(0,200,255,0.4); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .login-hint {
+    margin-top: 16px; text-align: center;
+    font-size: 12px; color: var(--text3);
+  }
+  .login-hint code {
+    background: var(--bg3); padding: 2px 8px; border-radius: 5px;
+    color: var(--cyan); font-size: 11px;
+  }
+
+  /* ═══════════════════════════════
+     MAIN APP LAYOUT
+  ═══════════════════════════════ */
+  #app { display: flex; min-height: 100vh; }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: 240px; min-height: 100vh;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; left: 0; z-index: 100;
+    transition: transform 0.3s;
+  }
+  .sidebar-logo {
+    padding: 24px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .sidebar-logo .logo-sm {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--cyan2), var(--cyan));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: #fff; flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0,200,255,0.25);
+  }
+  .sidebar-logo span {
+    font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800;
+    color: var(--text); letter-spacing: -0.5px;
+  }
+  .sidebar-logo span em { color: var(--cyan); font-style: normal; }
+
+  .sidebar-nav { flex: 1; padding: 16px 12px; }
+  .nav-section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--text3);
+    padding: 0 8px; margin: 16px 0 8px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 10px; cursor: pointer;
+    color: var(--text2); font-size: 14px; font-weight: 500;
+    transition: all 0.18s; margin-bottom: 2px; border: none;
+    background: transparent; width: 100%; text-align: left;
+  }
+  .nav-item i { width: 18px; text-align: center; font-size: 15px; }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: var(--cyan-glow); color: var(--cyan); }
+  .nav-item .nav-badge {
+    margin-left: auto; background: var(--cyan); color: var(--bg);
+    font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 10px;
+  }
+
+  .sidebar-user {
+    padding: 16px 20px; border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .user-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--bg4), var(--cyan2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: var(--cyan); flex-shrink: 0;
+  }
+  .user-info { flex: 1; min-width: 0; }
+  .user-info .name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-info .role { font-size: 11px; color: var(--text3); }
+  .logout-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--text3); font-size: 15px; transition: color 0.2s;
+  }
+  .logout-btn:hover { color: var(--red); }
+
+  /* ── MAIN CONTENT ── */
+  #main-content {
+    margin-left: 240px; flex: 1; min-height: 100vh;
+    display: flex; flex-direction: column;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    height: 64px; background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px; display: flex; align-items: center;
+    position: sticky; top: 0; z-index: 50;
+    gap: 16px;
+  }
+  .topbar-title {
+    font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700;
+    color: var(--text); flex: 1;
+  }
+  .topbar-title span { color: var(--text3); font-weight: 400; font-size: 14px; font-family: 'DM Sans', sans-serif; margin-left: 8px; }
+  .menu-toggle {
+    display: none; background: none; border: none; cursor: pointer;
+    color: var(--text2); font-size: 20px;
+  }
+
+  /* ── PAGE CONTENT ── */
+  .page-content { padding: 28px; flex: 1; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── STAT CARDS ── */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 16px; margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 20px 22px;
+    transition: all 0.2s; position: relative; overflow: hidden;
+  }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  }
+  .stat-card.cyan::before { background: linear-gradient(90deg, var(--cyan2), var(--cyan)); }
+  .stat-card.yellow::before { background: linear-gradient(90deg, #cc8800, var(--yellow)); }
+  .stat-card.blue::before { background: linear-gradient(90deg, #0055cc, #4499ff); }
+  .stat-card.green::before { background: linear-gradient(90deg, #00aa55, var(--green)); }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: var(--card-shadow); border-color: var(--border2); }
+  .stat-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
+  .stat-value { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; color: var(--text); line-height: 1; }
+  .stat-sub { font-size: 12px; color: var(--text3); margin-top: 6px; }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700;
+    color: var(--text);
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 22px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+    color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 16px;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-item { margin-bottom: 14px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 13px; color: var(--text2); margin-bottom: 6px; }
+  .progress-bar { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+
+  /* ── TABLE ── */
+  .table-wrapper { overflow-x: auto; border-radius: 12px; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--bg3); padding: 12px 16px;
+    font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--text3); text-align: left;
+  }
+  thead th:first-child { border-radius: 10px 0 0 0; }
+  thead th:last-child { border-radius: 0 10px 0 0; }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s; cursor: pointer;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg3); }
+  tbody td { padding: 14px 16px; font-size: 13px; color: var(--text2); vertical-align: middle; }
+  tbody td .ticket-id { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; color: var(--cyan); }
+  tbody td .ticket-subject { color: var(--text); font-weight: 500; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ── FILTERS ── */
+  .filters-bar {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-bottom: 16px; align-items: center;
+  }
+  .filter-select {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text2); padding: 8px 14px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer;
+    outline: none; transition: border-color 0.2s;
+  }
+  .filter-select:focus { border-color: var(--cyan); }
+  .search-input {
+    flex: 1; min-width: 200px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 14px 8px 38px;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px;
+    outline: none; transition: all 0.2s; position: relative;
+  }
+  .search-input:focus { border-color: var(--cyan); }
+  .search-wrapper { position: relative; flex: 1; min-width: 200px; }
+  .search-wrapper i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 13px; }
+
+  /* ── TICKET FORM ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-full { grid-column: 1 / -1; }
+  textarea.form-control { min-height: 100px; resize: vertical; }
+  .btn-submit {
+    padding: 12px 32px; width: auto;
+    background: linear-gradient(135deg, var(--cyan2), var(--cyan));
+    color: #fff; border: none; border-radius: 10px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+    transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: 0 4px 16px rgba(0,200,255,0.25);
+  }
+  .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,200,255,0.35); }
+
+  /* ── TICKET LIST (User) ── */
+  .ticket-card {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 18px; margin-bottom: 10px;
+    cursor: pointer; transition: all 0.18s;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .ticket-card:hover { border-color: var(--border2); background: var(--bg4); transform: translateX(2px); }
+  .ticket-card-id { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; color: var(--cyan); min-width: 80px; }
+  .ticket-card-info { flex: 1; min-width: 0; }
+  .ticket-card-subject { font-weight: 600; color: var(--text); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ticket-card-meta { font-size: 12px; color: var(--text3); }
+  .ticket-card-badges { display: flex; gap: 6px; flex-shrink: 0; }
+
+  /* ── MODAL / DETAIL VIEW ── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 40px 20px; overflow-y: auto;
+  }
+  .modal {
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 20px; width: 100%; max-width: 760px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    animation: modalIn 0.25s ease;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .modal-header {
+    padding: 24px 28px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 16px;
+  }
+  .modal-header-info { flex: 1; }
+  .modal-ticket-id { font-family: 'Syne', sans-serif; font-size: 13px; color: var(--cyan); font-weight: 700; margin-bottom: 4px; }
+  .modal-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--text); }
+  .modal-meta { font-size: 12px; color: var(--text3); margin-top: 6px; }
+  .modal-close {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+    width: 36px; height: 36px; cursor: pointer; color: var(--text2);
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+    transition: all 0.2s; flex-shrink: 0;
+  }
+  .modal-close:hover { background: var(--bg4); color: var(--red); border-color: var(--red); }
+  .modal-body { padding: 24px 28px; }
+  .modal-badges { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .modal-description {
+    background: var(--bg3); border-radius: 10px; padding: 14px;
+    font-size: 14px; color: var(--text2); line-height: 1.6; margin-bottom: 20px;
+  }
+
+  /* ── COMMENTS ── */
+  .comments-section { margin-top: 20px; }
+  .comments-title { font-size: 13px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+  .comment {
+    display: flex; gap: 12px; margin-bottom: 14px;
+  }
+  .comment-avatar {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .comment-avatar.user { background: rgba(0,200,255,0.15); color: var(--cyan); }
+  .comment-avatar.admin { background: rgba(168,85,247,0.15); color: var(--purple); }
+  .comment-bubble {
+    flex: 1; background: var(--bg3); border-radius: 10px; padding: 12px 14px;
+    font-size: 13px; color: var(--text2); line-height: 1.5;
+  }
+  .comment-bubble .comment-author { font-weight: 600; color: var(--text); margin-bottom: 4px; font-size: 12px; }
+  .comment-bubble .comment-time { font-size: 11px; color: var(--text3); margin-top: 6px; }
+
+  .comment-form { display: flex; gap: 10px; margin-top: 16px; }
+  .comment-input {
+    flex: 1; background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none;
+    transition: border-color 0.2s; resize: none; min-height: 44px;
+  }
+  .comment-input:focus { border-color: var(--cyan); }
+  .comment-send {
+    background: var(--cyan); border: none; border-radius: 10px;
+    width: 44px; height: 44px; cursor: pointer; color: var(--bg);
+    font-size: 16px; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; flex-shrink: 0;
+  }
+  .comment-send:hover { background: var(--cyan2); transform: scale(1.05); }
+
+  /* ── ADMIN CONTROLS ── */
+  .admin-controls {
+    background: var(--bg3); border-radius: 12px; padding: 16px;
+    margin-bottom: 20px; display: grid; grid-template-columns: repeat(3,1fr); gap: 12px;
+  }
+  .ctrl-group label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; display: block; margin-bottom: 6px; }
+  .ctrl-select {
+    width: 100%; background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); padding: 8px 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; outline: none;
+    transition: border-color 0.2s;
+  }
+  .ctrl-select:focus { border-color: var(--cyan); }
+
+  /* ── REPORTS ── */
+  .reports-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center; padding: 48px 20px;
+  }
+  .empty-state i { font-size: 40px; color: var(--text3); margin-bottom: 14px; display: block; }
+  .empty-state p { color: var(--text3); font-size: 14px; }
+
+  /* ── NOTIFICATION TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 999;
+    background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: 12px; padding: 14px 20px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    animation: toastIn 0.3s ease;
+    max-width: 320px;
+  }
+  .toast.success { border-color: rgba(34,221,136,0.3); }
+  .toast.success i { color: var(--green); }
+  .toast.error { border-color: rgba(255,68,102,0.3); }
+  .toast.error i { color: var(--red); }
+  @keyframes toastIn { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform: translateX(0); } }
+  .toast-text { font-size: 13px; color: var(--text); }
+
+  /* ── MOBILE ── */
+  @media (max-width: 900px) {
+    #sidebar { transform: translateX(-100%); }
+    #sidebar.open { transform: translateX(0); }
+    #main-content { margin-left: 0; }
+    .menu-toggle { display: block; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .admin-controls { grid-template-columns: 1fr; }
+    .reports-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .page-content { padding: 16px; }
+    .modal-body { padding: 18px; }
+    .modal-header { padding: 18px; }
+  }
+
+  .sidebar-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 99; display: none;
+  }
+  .sidebar-overlay.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN SCREEN ═══ -->
+<div id="login-screen">
+  <div class="login-container">
+    <div class="login-logo">
+      <div class="logo-icon"><i class="fas fa-headset"></i></div>
+      <h1>Nex<span>Desk</span></h1>
+      <p>IT Helpdesk Ticketing System</p>
+    </div>
+    <div class="login-card">
+      <div class="login-tabs">
+        <button class="login-tab active" onclick="switchLoginTab('user')"><i class="fas fa-user"></i> User</button>
+        <button class="login-tab" onclick="switchLoginTab('admin')"><i class="fas fa-shield-halved"></i> Admin</button>
+      </div>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" class="form-control" id="login-username" placeholder="Enter username" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" class="form-control" id="login-password" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn btn-primary" onclick="doLogin()"><i class="fas fa-arrow-right-to-bracket"></i> Sign In</button>
+      <div class="login-hint" id="login-hint">
+        Demo: <code>user / user123</code>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAIN APP ═══ -->
+<div id="app" class="hidden">
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-sm"><i class="fas fa-headset"></i></div>
+      <span>Nex<em>Desk</em></span>
+    </div>
+    <nav class="sidebar-nav" id="sidebar-nav">
+      <!-- Nav items injected by JS -->
+    </nav>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="user-avatar-sb">U</div>
+      <div class="user-info">
+        <div class="name" id="user-name-sb">User</div>
+        <div class="role" id="user-role-sb">User</div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()" title="Logout"><i class="fas fa-right-from-bracket"></i></button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div id="main-content">
+    <div class="topbar">
+      <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+    </div>
+    <div class="page-content" id="page-content">
+      <!-- Pages injected by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay hidden" id="modal-overlay" onclick="closeModalOnOverlay(event)">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast hidden" id="toast">
+  <i class="fas fa-check-circle"></i>
+  <span class="toast-text"></span>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  DATA & STATE
+// ═══════════════════════════════════════
+const USERS = {
+  'user':  { pass: 'user123',  role: 'user',  name: 'John Carter' },
+  'admin': { pass: 'admin123', role: 'admin', name: 'Admin User'  }
+};
+const TECHNICIANS = ['Alex Turner', 'Sarah Chen', 'Mike Ross', 'Priya Patel', 'Unassigned'];
+
+let currentUser = null;
+let currentPage = null;
+
+function getTickets() {
+  return JSON.parse(localStorage.getItem('nd_tickets') || '[]');
+}
+function saveTickets(t) {
+  localStorage.setItem('nd_tickets', JSON.stringify(t));
+}
+function nextTicketId() {
+  const tickets = getTickets();
+  const num = tickets.length + 1;
+  return 'TKT-' + String(num).padStart(4, '0');
+}
+function fmt(date) {
+  return new Date(date).toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+// ═══════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════
+let loginRole = 'user';
+function switchLoginTab(role) {
+  loginRole = role;
+  document.querySelectorAll('.login-tab').forEach((t,i) => {
+    t.classList.toggle('active', (i===0 && role==='user') || (i===1 && role==='admin'));
+  });
+  document.getElementById('login-hint').innerHTML = role === 'admin'
+    ? 'Demo: <code>admin / admin123</code>'
+    : 'Demo: <code>user / user123</code>';
+}
+function doLogin() {
+  const u = document.getElementById('login-username').value.trim();
+  const p = document.getElementById('login-password').value;
+  const found = USERS[u];
+  if (!found || found.pass !== p || found.role !== loginRole) {
+    showToast('Invalid credentials. Try again.', 'error');
+    return;
+  }
+  currentUser = { username: u, ...found };
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  initApp();
+}
+function doLogout() {
+  currentUser = null;
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('login-username').value = '';
+  document.getElementById('login-password').value = '';
+}
+
+// ═══════════════════════════════════════
+//  APP INIT
+// ═══════════════════════════════════════
+function initApp() {
+  // seed demo data
+  if (getTickets().length === 0) seedData();
+
+  // sidebar user info
+  document.getElementById('user-avatar-sb').textContent = currentUser.name.charAt(0);
+  document.getElementById('user-name-sb').textContent = currentUser.name;
+  document.getElementById('user-role-sb').textContent = currentUser.role === 'admin' ? 'Administrator' : 'Staff User';
+
+  buildSidebar();
+  const firstPage = currentUser.role === 'admin' ? 'dashboard' : 'submit';
+  navigateTo(firstPage);
+}
+
+function buildSidebar() {
+  const nav = document.getElementById('sidebar-nav');
+  const isAdmin = currentUser.role === 'admin';
+  const items = isAdmin ? [
+    { id:'dashboard', icon:'fa-gauge-high', label:'Dashboard' },
+    { id:'all-tickets', icon:'fa-ticket', label:'All Tickets' },
+    { id:'reports', icon:'fa-chart-bar', label:'Reports' },
+  ] : [
+    { id:'submit', icon:'fa-plus-circle', label:'New Ticket' },
+    { id:'my-tickets', icon:'fa-list-check', label:'My Tickets' },
+  ];
+  nav.innerHTML = `<div class="nav-section-label">Menu</div>` +
+    items.map(it => `
+      <button class="nav-item" id="nav-${it.id}" onclick="navigateTo('${it.id}')">
+        <i class="fas ${it.icon}"></i> ${it.label}
+        ${it.id==='all-tickets'?`<span class="nav-badge" id="nb-open">0</span>`:''}
+      </button>
+    `).join('');
+  updateOpenBadge();
+}
+
+function updateOpenBadge() {
+  const el = document.getElementById('nb-open');
+  if (!el) return;
+  const open = getTickets().filter(t => t.status === 'Open').length;
+  el.textContent = open;
+  el.style.display = open > 0 ? '' : 'none';
+}
+
+function navigateTo(page) {
+  currentPage = page;
+  document.getElementById('topbar-title').innerHTML = pageTitles[page] || page;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navBtn = document.getElementById('nav-' + page);
+  if (navBtn) navBtn.classList.add('active');
+  const content = document.getElementById('page-content');
+  content.innerHTML = renderPage(page);
+  closeSidebar();
+  updateOpenBadge();
+}
+
+const pageTitles = {
+  dashboard: 'Dashboard',
+  'all-tickets': 'All Tickets',
+  reports: 'Reports',
+  submit: 'Submit a Ticket',
+  'my-tickets': 'My Tickets',
+};
+
+// ═══════════════════════════════════════
+//  PAGE RENDERERS
+// ═══════════════════════════════════════
+function renderPage(page) {
+  if (page === 'dashboard') return renderDashboard();
+  if (page === 'all-tickets') return renderAllTickets();
+  if (page === 'reports') return renderReports();
+  if (page === 'submit') return renderSubmitForm();
+  if (page === 'my-tickets') return renderMyTickets();
+  return '<p>Page not found</p>';
+}
+
+// ── DASHBOARD ──
+function renderDashboard() {
+  const t = getTickets();
+  const open = t.filter(x=>x.status==='Open').length;
+  const inprog = t.filter(x=>x.status==='In Progress').length;
+  const resolved = t.filter(x=>x.status==='Resolved').length;
+  const critical = t.filter(x=>x.priority==='Critical').length;
+
+  const cats = ['Hardware','Software','Network','Account Access','Other'];
+  const catCounts = cats.map(c => t.filter(x=>x.category===c).length);
+  const maxCat = Math.max(...catCounts, 1);
+
+  const depts = ['IT','HR','Finance','Operations'];
+  const deptCounts = depts.map(d => t.filter(x=>x.department===d).length);
+  const maxDept = Math.max(...deptCounts, 1);
+
+  const recent = [...t].sort((a,b)=>new Date(b.created)-new Date(a.created)).slice(0,5);
+
+  return `
+  <div class="stats-grid">
+    <div class="stat-card cyan">
+      <div class="stat-label">Total Tickets</div>
+      <div class="stat-value">${t.length}</div>
+      <div class="stat-sub">All time</div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="stat-label">Open</div>
+      <div class="stat-value">${open}</div>
+      <div class="stat-sub">Awaiting action</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">In Progress</div>
+      <div class="stat-value">${inprog}</div>
+      <div class="stat-sub">Being handled</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Resolved</div>
+      <div class="stat-value">${resolved}</div>
+      <div class="stat-sub">Closed successfully</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+    <div class="card">
+      <div class="card-title">By Category</div>
+      ${cats.map((c,i)=>`
+        <div class="progress-item">
+          <div class="progress-label"><span>${c}</span><span>${catCounts[i]}</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${catCounts[i]/maxCat*100}%;background:var(--cyan)"></div></div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="card">
+      <div class="card-title">By Department</div>
+      ${depts.map((d,i)=>`
+        <div class="progress-item">
+          <div class="progress-label"><span>${d}</span><span>${deptCounts[i]}</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${deptCounts[i]/maxDept*100}%;background:var(--purple)"></div></div>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-header">
+      <div class="section-title">Recent Tickets</div>
+    </div>
+    ${recent.length === 0 ? '<div class="empty-state"><i class="fas fa-inbox"></i><p>No tickets yet</p></div>' : `
+    <div class="table-wrapper">
+    <table>
+      <thead><tr><th>ID</th><th>Subject</th><th>Department</th><th>Priority</th><th>Status</th><th>Date</th></tr></thead>
+      <tbody>
+        ${recent.map(tk=>`
+          <tr onclick="openTicketModal('${tk.id}')">
+            <td><span class="ticket-id">${tk.id}</span></td>
+            <td><span class="ticket-subject">${esc(tk.subject)}</span></td>
+            <td>${tk.department}</td>
+            <td>${priorityBadge(tk.priority)}</td>
+            <td>${statusBadge(tk.status)}</td>
+            <td>${fmt(tk.created)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table></div>`}
+  </div>`;
+}
+
+// ── ALL TICKETS (Admin) ──
+function renderAllTickets(filters={}) {
+  let t = getTickets();
+  const fStatus = filters.status || document.getElementById('f-status')?.value || '';
+  const fPriority = filters.priority || document.getElementById('f-priority')?.value || '';
+  const fDept = filters.dept || document.getElementById('f-dept')?.value || '';
+  const fSearch = filters.search || document.getElementById('f-search')?.value || '';
+
+  if (fStatus) t = t.filter(x=>x.status===fStatus);
+  if (fPriority) t = t.filter(x=>x.priority===fPriority);
+  if (fDept) t = t.filter(x=>x.department===fDept);
+  if (fSearch) t = t.filter(x=>x.id.toLowerCase().includes(fSearch.toLowerCase()) || x.subject.toLowerCase().includes(fSearch.toLowerCase()));
+  t = t.sort((a,b)=>new Date(b.created)-new Date(a.created));
+
+  return `
+  <div class="filters-bar">
+    <div class="search-wrapper">
+      <i class="fas fa-search"></i>
+      <input type="text" class="search-input" id="f-search" placeholder="Search by ID or keyword..." oninput="applyFilters()" value="${esc(fSearch)}">
+    </div>
+    <select class="filter-select" id="f-status" onchange="applyFilters()">
+      <option value="">All Status</option>
+      <option value="Open" ${fStatus==='Open'?'selected':''}>Open</option>
+      <option value="In Progress" ${fStatus==='In Progress'?'selected':''}>In Progress</option>
+      <option value="Resolved" ${fStatus==='Resolved'?'selected':''}>Resolved</option>
+      <option value="Closed" ${fStatus==='Closed'?'selected':''}>Closed</option>
+    </select>
+    <select class="filter-select" id="f-priority" onchange="applyFilters()">
+      <option value="">All Priority</option>
+      <option value="Critical">Critical</option>
+      <option value="High">High</option>
+      <option value="Medium">Medium</option>
+      <option value="Low">Low</option>
+    </select>
+    <select class="filter-select" id="f-dept" onchange="applyFilters()">
+      <option value="">All Departments</option>
+      <option value="IT">IT</option>
+      <option value="HR">HR</option>
+      <option value="Finance">Finance</option>
+      <option value="Operations">Operations</option>
+    </select>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden">
+    ${t.length === 0 ? '<div class="empty-state"><i class="fas fa-filter"></i><p>No tickets match your filters</p></div>' : `
+    <div class="table-wrapper">
+    <table>
+      <thead><tr><th>ID</th><th>Subject</th><th>Submitter</th><th>Dept</th><th>Category</th><th>Priority</th><th>Status</th><th>Assigned</th><th>Date</th></tr></thead>
+      <tbody>
+        ${t.map(tk=>`
+          <tr onclick="openTicketModal('${tk.id}')">
+            <td><span class="ticket-id">${tk.id}</span></td>
+            <td><span class="ticket-subject">${esc(tk.subject)}</span></td>
+            <td>${esc(tk.submitterName)}</td>
+            <td>${tk.department}</td>
+            <td>${tk.category}</td>
+            <td>${priorityBadge(tk.priority)}</td>
+            <td>${statusBadge(tk.status)}</td>
+            <td style="color:var(--text3);font-size:12px">${tk.assignedTo||'—'}</td>
+            <td style="white-space:nowrap">${fmt(tk.created)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table></div>`}
+  </div>`;
+}
+
+function applyFilters() {
+  document.getElementById('page-content').innerHTML = renderAllTickets();
+}
+
+// ── REPORTS ──
+function renderReports() {
+  const t = getTickets();
+  const cats = ['Hardware','Software','Network','Account Access','Other'];
+  const catCounts = cats.map(c => t.filter(x=>x.category===c).length);
+  const topCat = cats[catCounts.indexOf(Math.max(...catCounts))] || 'N/A';
+  const depts = ['IT','HR','Finance','Operations'];
+  const deptCounts = depts.map(d => t.filter(x=>x.department===d).length);
+  const priorities = ['Critical','High','Medium','Low'];
+  const priColors = ['var(--red)','var(--orange)','var(--yellow)','var(--green)'];
+  const priCounts = priorities.map(p=>t.filter(x=>x.priority===p).length);
+  const maxPri = Math.max(...priCounts,1);
+  const maxDept = Math.max(...deptCounts,1);
+  const avgRes = '4.2 hrs';
+
+  return `
+  <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat-card cyan">
+      <div class="stat-label">Top Category</div>
+      <div class="stat-value" style="font-size:22px">${topCat}</div>
+      <div class="stat-sub">Most common issue</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Avg Resolution</div>
+      <div class="stat-value">${avgRes}</div>
+      <div class="stat-sub">Estimated average</div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="stat-label">Open Rate</div>
+      <div class="stat-value">${t.length?Math.round(t.filter(x=>x.status==='Open').length/t.length*100):0}%</div>
+      <div class="stat-sub">Tickets still open</div>
+    </div>
+  </div>
+
+  <div class="reports-grid">
+    <div class="card">
+      <div class="card-title">Tickets by Priority</div>
+      ${priorities.map((p,i)=>`
+        <div class="progress-item">
+          <div class="progress-label"><span>${p}</span><span>${priCounts[i]}</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${priCounts[i]/maxPri*100}%;background:${priColors[i]}"></div></div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="card">
+      <div class="card-title">Tickets by Department</div>
+      ${depts.map((d,i)=>`
+        <div class="progress-item">
+          <div class="progress-label"><span>${d}</span><span>${deptCounts[i]}</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${deptCounts[i]/maxDept*100}%;background:var(--cyan)"></div></div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="card">
+      <div class="card-title">Tickets by Category</div>
+      ${cats.map((c,i)=>`
+        <div class="progress-item">
+          <div class="progress-label"><span>${c}</span><span>${catCounts[i]}</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${catCounts[i]/Math.max(...catCounts,1)*100}%;background:var(--purple)"></div></div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="card">
+      <div class="card-title">Status Overview</div>
+      ${['Open','In Progress','Resolved','Closed'].map((s,i)=>{
+        const colors=['var(--yellow)','var(--cyan)','var(--green)','var(--text3)'];
+        const cnt=t.filter(x=>x.status===s).length;
+        return `
+        <div class="progress-item">
+          <div class="progress-label"><span>${s}</span><span>${cnt}</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${t.length?cnt/t.length*100:0}%;background:${colors[i]}"></div></div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+// ── SUBMIT FORM ──
+function renderSubmitForm() {
+  return `
+  <div class="card">
+    <div class="card-title"><i class="fas fa-plus-circle" style="color:var(--cyan)"></i> New Support Ticket</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" class="form-control" id="f-name" placeholder="Your full name" value="${esc(currentUser.name)}">
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" class="form-control" id="f-email" placeholder="your@email.com" value="${currentUser.username}@company.com">
+      </div>
+      <div class="form-group">
+        <label>Department</label>
+        <select class="form-control" id="f-dept2">
+          <option>IT</option><option>HR</option><option>Finance</option><option>Operations</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Priority</label>
+        <select class="form-control" id="f-pri">
+          <option>Low</option><option selected>Medium</option><option>High</option><option>Critical</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select class="form-control" id="f-cat">
+          <option>Hardware</option><option>Software</option><option>Network</option><option>Account Access</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Subject</label>
+        <input type="text" class="form-control" id="f-subj" placeholder="Brief description of the issue">
+      </div>
+      <div class="form-group form-full">
+        <label>Description</label>
+        <textarea class="form-control" id="f-desc" placeholder="Provide detailed information about the issue..."></textarea>
+      </div>
+    </div>
+    <div style="margin-top:8px">
+      <button class="btn-submit" onclick="submitTicket()"><i class="fas fa-paper-plane"></i> Submit Ticket</button>
+    </div>
+  </div>`;
+}
+
+function submitTicket() {
+  const name = document.getElementById('f-name').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const subj = document.getElementById('f-subj').value.trim();
+  const desc = document.getElementById('f-desc').value.trim();
+  if (!name || !subj || !desc) { showToast('Please fill in all required fields.', 'error'); return; }
+
+  const tickets = getTickets();
+  const tk = {
+    id: nextTicketId(),
+    submitterName: name,
+    submitterEmail: email,
+    submitterUsername: currentUser.username,
+    department: document.getElementById('f-dept2').value,
+    priority: document.getElementById('f-pri').value,
+    category: document.getElementById('f-cat').value,
+    subject: subj,
+    description: desc,
+    status: 'Open',
+    assignedTo: 'Unassigned',
+    created: new Date().toISOString(),
+    comments: [],
+  };
+  tickets.push(tk);
+  saveTickets(tickets);
+  showToast(`Ticket ${tk.id} submitted successfully!`, 'success');
+  navigateTo('my-tickets');
+}
+
+// ── MY TICKETS ──
+function renderMyTickets() {
+  const t = getTickets().filter(x=>x.submitterUsername===currentUser.username)
+    .sort((a,b)=>new Date(b.created)-new Date(a.created));
+
+  if (t.length === 0) return `
+    <div class="card">
+      <div class="empty-state">
+        <i class="fas fa-ticket"></i>
+        <p>You haven't submitted any tickets yet.</p>
+      </div>
+    </div>`;
+
+  return `
+  <div class="section-header">
+    <div class="section-title">Your Tickets (${t.length})</div>
+    <button class="btn-submit" onclick="navigateTo('submit')" style="padding:9px 20px;font-size:13px">
+      <i class="fas fa-plus"></i> New Ticket
+    </button>
+  </div>
+  ${t.map(tk=>`
+    <div class="ticket-card" onclick="openTicketModal('${tk.id}')">
+      <span class="ticket-card-id">${tk.id}</span>
+      <div class="ticket-card-info">
+        <div class="ticket-card-subject">${esc(tk.subject)}</div>
+        <div class="ticket-card-meta">${tk.category} · ${tk.department} · ${fmt(tk.created)}</div>
+      </div>
+      <div class="ticket-card-badges">
+        ${priorityBadge(tk.priority)}
+        ${statusBadge(tk.status)}
+      </div>
+    </div>
+  `).join('')}`;
+}
+
+// ═══════════════════════════════════════
+//  TICKET MODAL
+// ═══════════════════════════════════════
+function openTicketModal(id) {
+  const tk = getTickets().find(t=>t.id===id);
+  if (!tk) return;
+  const isAdmin = currentUser.role === 'admin';
+
+  const adminControls = isAdmin ? `
+    <div class="admin-controls">
+      <div class="ctrl-group">
+        <label>Status</label>
+        <select class="ctrl-select" id="ctrl-status" onchange="updateTicketField('${id}','status',this.value)">
+          ${['Open','In Progress','Resolved','Closed'].map(s=>`<option ${tk.status===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <label>Priority</label>
+        <select class="ctrl-select" id="ctrl-priority" onchange="updateTicketField('${id}','priority',this.value)">
+          ${['Low','Medium','High','Critical'].map(p=>`<option ${tk.priority===p?'selected':''}>${p}</option>`).join('')}
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <label>Assign To</label>
+        <select class="ctrl-select" id="ctrl-assign" onchange="updateTicketField('${id}','assignedTo',this.value)">
+          ${TECHNICIANS.map(t=>`<option ${tk.assignedTo===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+    </div>` : '';
+
+  const comments = (tk.comments || []).map(c=>`
+    <div class="comment">
+      <div class="comment-avatar ${c.role}">${c.author.charAt(0)}</div>
+      <div class="comment-bubble">
+        <div class="comment-author">${esc(c.author)} ${c.role==='admin'?'<span style="color:var(--purple);font-size:10px">[Admin]</span>':''}</div>
+        ${esc(c.text)}
+        <div class="comment-time">${fmt(c.time)}</div>
+      </div>
+    </div>
+  `).join('') || `<div style="color:var(--text3);font-size:13px;padding:8px 0">No comments yet.</div>`;
+
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-header-info">
+        <div class="modal-ticket-id">${tk.id}</div>
+        <div class="modal-title">${esc(tk.subject)}</div>
+        <div class="modal-meta">Submitted by <strong>${esc(tk.submitterName)}</strong> · ${fmt(tk.created)} · Assigned to: ${tk.assignedTo||'—'}</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-badges">
+        ${statusBadge(tk.status)}
+        ${priorityBadge(tk.priority)}
+        <span class="badge" style="background:rgba(100,100,200,0.1);color:#8899cc;border:1px solid rgba(100,100,200,0.2)">${tk.category}</span>
+        <span class="badge" style="background:rgba(100,100,200,0.1);color:#8899cc;border:1px solid rgba(100,100,200,0.2)">${tk.department}</span>
+      </div>
+      ${adminControls}
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Description</div>
+      <div class="modal-description">${esc(tk.description)}</div>
+      <div class="comments-section">
+        <div class="comments-title">Comments (${(tk.comments||[]).length})</div>
+        ${comments}
+        <div class="comment-form">
+          <textarea class="comment-input" id="comment-input" placeholder="Add a ${isAdmin?'note or':''}reply..."></textarea>
+          <button class="comment-send" onclick="addComment('${id}')"><i class="fas fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function updateTicketField(id, field, value) {
+  const tickets = getTickets();
+  const tk = tickets.find(t=>t.id===id);
+  if (!tk) return;
+  tk[field] = value;
+  saveTickets(tickets);
+  showToast(`Ticket ${field} updated to "${value}"`, 'success');
+  updateOpenBadge();
+  // refresh badge display in modal header
+  const badges = document.querySelector('.modal-badges');
+  if (badges) {
+    badges.querySelector('.badge:first-child').outerHTML = statusBadge(tk.status);
+    badges.querySelector('.badge:nth-child(2)').outerHTML = priorityBadge(tk.priority);
+  }
+}
+
+function addComment(id) {
+  const input = document.getElementById('comment-input');
+  const text = input.value.trim();
+  if (!text) return;
+  const tickets = getTickets();
+  const tk = tickets.find(t=>t.id===id);
+  if (!tk) return;
+  if (!tk.comments) tk.comments = [];
+  tk.comments.push({
+    author: currentUser.name,
+    role: currentUser.role,
+    text,
+    time: new Date().toISOString(),
+  });
+  saveTickets(tickets);
+  input.value = '';
+  showToast('Comment added.', 'success');
+  openTicketModal(id);
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.add('hidden');
+  if (currentPage) navigateTo(currentPage);
+}
+function closeModalOnOverlay(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+// ═══════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════
+function statusBadge(s) {
+  const map = { 'Open':'open','In Progress':'inprogress','Resolved':'resolved','Closed':'closed' };
+  return `<span class="badge badge-${map[s]||'open'}">${s}</span>`;
+}
+function priorityBadge(p) {
+  return `<span class="badge badge-${p.toLowerCase()}">${p}</span>`;
+}
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── TOAST ──
+let toastTimer;
+function showToast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.className = `toast ${type}`;
+  el.querySelector('i').className = type==='success' ? 'fas fa-check-circle' : 'fas fa-circle-exclamation';
+  el.querySelector('.toast-text').textContent = msg;
+  el.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.add('hidden'), 3000);
+}
+
+// ── SIDEBAR MOBILE ──
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('active');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('active');
+}
+
+// ═══════════════════════════════════════
+//  SEED DATA
+// ═══════════════════════════════════════
+function seedData() {
+  const now = new Date();
+  const ago = (h) => new Date(now - h*3600000).toISOString();
+  const tickets = [
+    { id:'TKT-0001', submitterName:'Alice Wong', submitterEmail:'alice@company.com', submitterUsername:'user', department:'IT', priority:'Critical', category:'Network', subject:'VPN not connecting from home', description:'Unable to connect to company VPN since this morning. Error: "Authentication failed". I have tried restarting the client.', status:'In Progress', assignedTo:'Alex Turner', created: ago(24), comments:[{author:'Alex Turner',role:'admin',text:'We are investigating the VPN gateway issue. Will update shortly.',time:ago(20)}] },
+    { id:'TKT-0002', submitterName:'Bob Smith', submitterEmail:'bob@company.com', submitterUsername:'user', department:'HR', priority:'High', category:'Account Access', subject:'Cannot log into HR portal', description:'Getting locked out of the HR portal after entering the correct credentials. Password reset does not help.', status:'Open', assignedTo:'Unassigned', created: ago(12), comments:[] },
+    { id:'TKT-0003', submitterName:'Carol Lee', submitterEmail:'carol@company.com', submitterUsername:'user', department:'Finance', priority:'Medium', category:'Software', subject:'Excel crashing when opening large files', description:'Microsoft Excel crashes whenever I open a file larger than 10MB. This started after the latest Windows update.', status:'Resolved', assignedTo:'Priya Patel', created: ago(48), comments:[{author:'Priya Patel',role:'admin',text:'Issue resolved by rolling back the latest Office patch.',time:ago(36)}] },
+    { id:'TKT-0004', submitterName:'David Park', submitterEmail:'david@company.com', submitterUsername:'user', department:'Operations', priority:'Low', category:'Hardware', subject:'Monitor flickering intermittently', description:'My second monitor has been flickering for the past week. I have tried replacing the cable but the issue persists.', status:'Open', assignedTo:'Mike Ross', created: ago(6), comments:[] },
+    { id:'TKT-0005', submitterName:'John Carter', submitterEmail:'user@company.com', submitterUsername:'user', department:'IT', priority:'High', category:'Software', subject:'Antivirus not updating', description:'The enterprise antivirus software on my machine has not updated in 3 days. It shows an error when trying to manually update.', status:'Closed', assignedTo:'Sarah Chen', created: ago(72), comments:[{author:'Sarah Chen',role:'admin',text:'Resolved. Antivirus service restarted and signatures updated.',time:ago(60)}] },
+  ];
+  saveTickets(tickets);
+}
+</script>
+</body>
+</html>
